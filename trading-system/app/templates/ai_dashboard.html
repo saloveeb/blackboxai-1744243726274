@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mt-4">لوحة تحكم الذكاء الاصطناعي</h1>
+    
+    <div class="row mt-4">
+        <!-- قسم التنبؤات -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5>تنبؤات الذكاء الاصطناعي</h5>
+                </div>
+                <div class="card-body">
+                    <div id="predictionChart" style="height: 300px;"></div>
+                    <div class="mt-3">
+                        <h6>التنبؤات القادمة:</h6>
+                        <ul id="predictionsList" class="list-group"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم التنبيهات -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5>تنبيهات التداول</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert-container" style="max-height: 400px; overflow-y: auto;">
+                        {% for alert in alerts %}
+                        <div class="alert alert-{{ alert.type }} alert-dismissible fade show">
+                            {{ alert.message }}
+                            <small class="text-muted">{{ alert.time }}</small>
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button id="configureAlerts" class="btn btn-info mt-3">تكوين التنبيهات</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// JavaScript للتفاعل مع واجهة المستخدم
+document.addEventListener('DOMContentLoaded', function() {
+    // تحويل بيانات التنبؤات من Jinja2 إلى JavaScript
+    const predictionData = JSON.parse('{{ predictions|tojson|safe }}');
+    
+    // عرض التنبؤات على الرسم البياني
+    renderPredictionChart(predictionData);
+    
+    // تحديث التنبيهات تلقائياً كل 30 ثانية
+    setInterval(fetchNewAlerts, 30000);
+});
+
+function renderPredictionChart(data) {
+    // تنفيذ رسم الرسم البياني باستخدام Chart.js
+    const ctx = document.getElementById('predictionChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.dates,
+            datasets: [{
+                label: 'التنبؤات',
+                data: data.values,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    rtl: true,
+                    align: 'start'
+                }
+            }
+        }
+    });
+}
+
+async function fetchNewAlerts() {
+    try {
+        const response = await fetch('/api/alerts');
+        const alerts = await response.json();
+        updateAlertsUI(alerts);
+    } catch (error) {
+        console.error('Error fetching alerts:', error);
+    }
+}
+
+function updateAlertsUI(alerts) {
+    const container = document.querySelector('.alert-container');
+    alerts.forEach(alert => {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${alert.type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${alert.message}
+            <small class="text-muted">${alert.time}</small>
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        `;
+        container.prepend(alertDiv);
+    });
+}
+</script>
+{% endblock %}
