@@ -1,0 +1,22 @@
+{
+    "price_alerts": {
+        "threshold": 0.05,
+        "enabled": true,
+        "notification_types": ["email", "dashboard"]
+    },
+    "volume_alerts": {
+        "threshold": 2.0,
+        "enabled": true,
+        "notification_types": ["dashboard"]
+    },
+    "sentiment_alerts": {
+        "threshold": 0.3,
+        "enabled": true,
+        "notification_types": ["email", "dashboard", "sms"]
+    },
+    "rsi_alerts": {
+        "overbought": 70,
+        "oversold": 30,
+        "enabled": true
+    }
+}
